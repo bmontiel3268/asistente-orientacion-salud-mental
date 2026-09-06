@@ -6,173 +6,225 @@ st.set_page_config(
     layout="centered"
 )
 
+# -----------------------------
+# CONFIGURACIÓN DE LA PÁGINA
+# -----------------------------
+
 st.title("💚 Red de Apoyo")
-st.subheader("Orientación y canalización en salud mental")
+st.subheader("Asistente de orientación en salud mental")
 
 st.warning(
-    "Este prototipo proporciona información y opciones de canalización. "
+    "Este asistente proporciona información y opciones de canalización. "
     "No sustituye la atención psicológica, médica o de emergencia."
 )
 
-st.markdown(
-    """
-    Este espacio busca ayudarte a encontrar información y contactar servicios
-    profesionales. No necesitas proporcionar tu nombre, domicilio, diagnóstico
-    ni otros datos personales.
-    """
+st.error(
+    "Si existe peligro inmediato, llama al 911 o acude al servicio "
+    "de urgencias más cercano."
 )
+
+# -----------------------------
+# MEMORIA TEMPORAL DEL CHAT
+# -----------------------------
+
+if "mensajes" not in st.session_state:
+    st.session_state.mensajes = [
+        {
+            "role": "assistant",
+            "content": (
+                "Hola. Soy un asistente digital de orientación. "
+                "Puedo ayudarte a localizar información y servicios profesionales.\n\n"
+                "No necesitas proporcionar tu nombre, domicilio ni otros datos personales.\n\n"
+                "¿Qué necesitas en este momento?"
+            )
+        }
+    ]
+
+# Mostrar la conversación
+for mensaje in st.session_state.mensajes:
+    with st.chat_message(mensaje["role"]):
+        st.markdown(mensaje["content"])
+
+# -----------------------------
+# RESPUESTAS CONTROLADAS
+# -----------------------------
+
+def generar_respuesta(texto):
+    consulta = texto.lower()
+
+    expresiones_urgentes = [
+        "quiero morir",
+        "me quiero morir",
+        "quiero matarme",
+        "voy a matarme",
+        "hacerme daño",
+        "lastimarme",
+        "no quiero vivir",
+        "peligro inmediato",
+        "ya no quiero vivir"
+    ]
+
+    if any(expresion in consulta for expresion in expresiones_urgentes):
+        return """
+🚨 **Es importante solicitar ayuda inmediata.**
+
+Llama al **911** o acude al servicio de urgencias más cercano.
+
+También puedes comunicarte con:
+
+- **Línea de la Vida:** 800 911 2000.
+- **LOCATEL CDMX:** *0311 o 55 5658 1111.
+
+Si es posible, permanece acompañado por una persona de confianza mientras
+recibes ayuda. No dependas únicamente de este chatbot.
+"""
+
+    if (
+        "otra persona" in consulta
+        or "amigo" in consulta
+        or "amiga" in consulta
+        or "familiar" in consulta
+        or "ayudar a alguien" in consulta
+    ):
+        return """
+Si estás preocupado por otra persona, escucha con respeto y toma en serio
+lo que expresa.
+
+Puedes:
+
+1. Preguntarle si acepta recibir ayuda profesional.
+2. Ofrecerte a acompañarla.
+3. Contactar a una persona adulta o profesional de confianza.
+4. Solicitar atención urgente si existe peligro inmediato.
+
+Si la persona expresa intención de hacerse daño, llama al **911** o a
+**Línea de la Vida: 800 911 2000**.
+"""
+
+    if (
+        "profesional" in consulta
+        or "psicólogo" in consulta
+        or "psicologa" in consulta
+        or "ayuda" in consulta
+        or "contactar" in consulta
+    ):
+        return """
+Puedes solicitar orientación profesional mediante:
+
+☎️ **Línea de la Vida:** 800 911 2000.
+
+En la Ciudad de México también puedes solicitar servicio psicológico en:
+
+☎️ **LOCATEL:** *0311 o 55 5658 1111.
+
+Si existe peligro inmediato, llama al **911** o acude a urgencias.
+"""
+
+    if (
+        "señales" in consulta
+        or "síntomas" in consulta
+        or "información" in consulta
+        or "salud mental" in consulta
+    ):
+        return """
+Algunas expresiones de desesperanza, aislamiento o cambios importantes de
+comportamiento pueden indicar que una persona necesita apoyo.
+
+Estas señales no permiten realizar un diagnóstico. La valoración debe hacerla
+personal especializado.
+
+Puedes comunicarte con **Línea de la Vida: 800 911 2000** para recibir
+orientación.
+"""
+
+    return """
+Gracias por escribir. Este prototipo no puede realizar una valoración
+psicológica ni interpretar clínicamente tu situación.
+
+Puedo ayudarte con alguno de estos temas:
+
+- Información general sobre salud mental.
+- Cómo acompañar a otra persona.
+- Cómo contactar a un profesional.
+- Qué hacer ante una situación de peligro inmediato.
+
+Escribe el tema sobre el que necesitas información.
+"""
+
+# -----------------------------
+# CAMPO PARA ESCRIBIR
+# -----------------------------
+
+consulta = st.chat_input("Escribe aquí tu consulta, sin proporcionar datos personales")
+
+if consulta:
+    st.session_state.mensajes.append(
+        {"role": "user", "content": consulta}
+    )
+
+    with st.chat_message("user"):
+        st.markdown(consulta)
+
+    respuesta = generar_respuesta(consulta)
+
+    st.session_state.mensajes.append(
+        {"role": "assistant", "content": respuesta}
+    )
+
+    with st.chat_message("assistant"):
+        st.markdown(respuesta)
+
+# -----------------------------
+# INFORMACIÓN ADICIONAL
+# -----------------------------
 
 st.divider()
 
-st.subheader("¿Qué necesitas en este momento?")
+col1, col2 = st.columns(2)
 
-opcion = st.radio(
-    "Selecciona una opción:",
-    [
-        "Necesito información sobre salud mental",
-        "Estoy preocupado por otra persona",
-        "Quiero contactar a un profesional",
-        "Existe peligro inmediato",
-    ],
-    index=None
-)
-
-if opcion == "Necesito información sobre salud mental":
-    st.info(
-        """
-        Pedir ayuda es una acción válida y recomendable. Puedes hablar con una
-        persona de confianza o acercarte a un servicio profesional de salud mental.
-        """
-    )
-
-    tema = st.selectbox(
-        "¿Sobre qué tema necesitas orientación?",
-        [
-            "Selecciona una opción",
-            "Señales de alerta",
-            "Cómo solicitar ayuda",
-            "Cómo acompañar a otra persona",
-            "Directorio de servicios",
-        ]
-    )
-
-    if tema == "Señales de alerta":
-        st.write(
-            """
-            Algunas señales requieren atención profesional: aislamiento,
-            desesperanza intensa, cambios importantes de comportamiento o
-            expresiones relacionadas con no querer continuar viviendo.
-
-            Una señal aislada no permite realizar un diagnóstico. La valoración
-            debe hacerla personal especializado.
-            """
-        )
-
-    elif tema == "Cómo solicitar ayuda":
-        st.write(
-            """
-            Puedes comunicarte con un servicio de orientación, acudir a una
-            institución de salud o pedir a una persona de confianza que te
-            acompañe durante la búsqueda de ayuda.
-            """
-        )
-
-    elif tema == "Cómo acompañar a otra persona":
-        st.write(
-            """
-            Escucha sin juzgar, toma en serio lo que expresa y ayúdale a contactar
-            personal especializado. Si existe peligro inmediato, no dejes sola a
-            la persona y solicita apoyo de emergencia.
-            """
-        )
-
-    elif tema == "Directorio de servicios":
-        st.success("Línea de la Vida: 800 911 2000")
-        st.write("Emergencias: 911")
-        st.write("LOCATEL CDMX: *0311 o 55 5658 1111")
-
-elif opcion == "Estoy preocupado por otra persona":
-    st.info(
-        """
-        Escucha con respeto y evita minimizar lo que la persona expresa.
-        Pregunta si acepta contactar a un servicio profesional y ofrécete a
-        acompañarla.
-        """
-    )
-
-    st.markdown(
-        """
-        **Busca ayuda urgente cuando:**
-
-        - La persona manifiesta que se encuentra en peligro inmediato.
-        - Menciona una intención de hacerse daño.
-        - No puede mantenerse segura.
-        - Ha realizado una acción que requiere atención médica.
-        """
-    )
-
-    st.error(
-        "Ante peligro inmediato: llama al 911 o solicita apoyo presencial."
-    )
-
-elif opcion == "Quiero contactar a un profesional":
-    st.success("Línea de la Vida: 800 911 2000")
-    st.write("Servicio oficial de orientación en salud mental.")
-
-    st.info(
-        """
-        En la Ciudad de México también puedes solicitar servicio psicológico
-        mediante LOCATEL: *0311 o 55 5658 1111.
-        """
-    )
-
+with col1:
     st.link_button(
-        "Consultar Línea de la Vida",
-        "https://www.gob.mx/lineadelavida"
+        "☎️ Línea de la Vida",
+        "https://www.gob.mx/lineadelavida",
+        use_container_width=True
     )
 
-elif opcion == "Existe peligro inmediato":
-    st.error(
-        """
-        Si tú u otra persona se encuentran en peligro inmediato, llama al 911
-        o acude al servicio de urgencias más cercano.
-        """
+with col2:
+    st.link_button(
+        "🚨 Información del 911",
+        "https://www.gob.mx/911",
+        use_container_width=True
     )
 
-    st.warning(
-        """
-        Si es posible, permanece acompañado por una persona de confianza mientras
-        llega la ayuda. No dependas únicamente de este sitio.
-        """
-    )
+if st.button("🗑️ Borrar conversación"):
+    st.session_state.mensajes = [
+        {
+            "role": "assistant",
+            "content": (
+                "Hola. Soy un asistente digital de orientación. "
+                "¿Qué información necesitas?"
+            )
+        }
+    ]
+    st.rerun()
 
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.link_button(
-            "Línea de la Vida",
-            "https://www.gob.mx/lineadelavida"
-        )
-
-    with col2:
-        st.link_button(
-            "Emergencias 911",
-            "https://www.gob.mx/911"
-        )
-
-st.divider()
-
-with st.expander("Privacidad y límites del servicio"):
+with st.expander("Privacidad y límites del asistente"):
     st.write(
         """
-        Este prototipo no realiza diagnósticos, no determina automáticamente el
-        nivel de riesgo y no sustituye una valoración profesional. No debe
-        solicitar ni almacenar nombres, domicilios, expedientes clínicos o
-        conversaciones personales.
+        Este prototipo no realiza diagnósticos, no determina clínicamente el
+        nivel de riesgo y no sustituye una valoración profesional.
+
+        La identificación de determinadas expresiones solamente activa una
+        ruta preventiva. No constituye una evaluación psicológica y puede
+        cometer errores.
+
+        No proporciones nombres, domicilios, teléfonos, expedientes clínicos
+        ni otra información personal.
         """
     )
 
 st.caption(
-    "Prototipo académico. La información y los directorios deben ser revisados "
-    "por profesionales e instituciones competentes antes de su publicación."
+    "Prototipo académico. Los contenidos y directorios deben ser revisados "
+    "por profesionales e instituciones competentes antes de su publicación. "
+    "Última actualización: septiembre de 2026."
 )
